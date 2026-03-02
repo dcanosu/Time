@@ -3,9 +3,19 @@
 public class Time
 {
     private int _hour;
-    private int _millisecond;
     private int _minute;
+    private int _millisecond;
     private int _second;
+
+    private const int MillisecondsPerSecond = 1000;
+    private const int SecondsPerMinute = 60;
+    private const int MinutesPerHour = 60;
+    private const int HoursPerDay = 24;
+
+    private const int SecondsPerHour = SecondsPerMinute * MinutesPerHour; // 3600 seconds in an hour
+    private const int MillisecondsPerMinute = SecondsPerMinute * MillisecondsPerSecond; // 60000 milliseconds in a minute
+    private const int MillisecondsPerHour = SecondsPerHour * MillisecondsPerSecond; // 3600000 milliseconds in an hour
+    private const int MillisecondsPerDay = HoursPerDay * MillisecondsPerHour; // 86400000 milliseconds in a day
 
     public Time()
     {
@@ -41,127 +51,101 @@ public class Time
         Millisecond = millisecond;
     }
 
-    public int Hour { get => _hour; set => _hour = ValidHour(value); }
-    public int Millisecond { get => _millisecond; set => _millisecond = ValidMillisecond(value); }
-    public int Minute { get => _minute; set => _minute = ValidMinute(value); }
-    public int Second { get => _second; set => _second = ValidSecond(value); }
+    public int Hour 
+    { 
+        get => _hour; 
+        set => _hour = ValidHour(value); 
+    }
 
+    public int Minute 
+    { 
+        get => _minute; 
+        set => _minute = ValidMinute(value); 
+    }
+
+    public int Second 
+    { 
+        get => _second; 
+        set => _second = ValidSecond(value); 
+    }
+
+    public int Millisecond 
+    { 
+        get => _millisecond; 
+        set => _millisecond = ValidMillisecond(value); 
+    }
+    public int ToMinutes()
+    {
+        return (Hour * MinutesPerHour) + Minute;
+    }
+
+    public int ToSeconds()
+    {
+        return (Hour * SecondsPerHour) + (Minute * SecondsPerMinute) + Second;
+    }
+    public int ToMilliseconds()
+    {
+        return (Hour * MillisecondsPerHour) + (Minute * MillisecondsPerMinute) + (Second * MillisecondsPerSecond) + Millisecond;
+    }
+    public bool IsOtherDay(Time time)
+    {
+        int totalMilliseconds = ToMilliseconds() + time.ToMilliseconds();
+        return totalMilliseconds >= MillisecondsPerDay;
+    }
+
+    public Time Add(Time time)
+    {
+        int millisecond = Millisecond + time.Millisecond;
+        int extraSecond = millisecond / MillisecondsPerSecond;
+        millisecond %= MillisecondsPerSecond;
+
+        int second = Second + time.Second + extraSecond;
+        int extraMinute = second / SecondsPerMinute;
+        second %= SecondsPerMinute;
+
+        int minute = Minute + time.Minute + extraMinute;
+        int extraHour = minute / MinutesPerHour;
+        minute %= MinutesPerHour;
+
+        int hour = Hour + time.Hour + extraHour;
+        hour %= HoursPerDay;
+
+        return new Time(hour, minute, second, millisecond);
+    }
+
+    public override string ToString()
+    {
+        int hour12 = Hour % 12;
+        string period = Hour < 12 ? "AM" : "PM";
+
+        return $"{hour12:00}:{Minute:00}:{Second:00}.{Millisecond:000} {period}";
+    }
 
     private int ValidHour(int hour)
     {
         if (hour < 0 || hour > 23)
-            throw new ArgumentOutOfRangeException(nameof(hour), $"The hour: {hour} is not valid.");
+            throw new ArgumentOutOfRangeException(paramName: null, $"The hour: {hour} is not valid.");
         return hour;
-    }
-
-    private int ValidMillisecond(int millisecond)
-    {
-        if (millisecond < 0 || millisecond > 999)
-                throw new System.ArgumentOutOfRangeException(nameof(millisecond), $"The millisecond: {millisecond} is not valid.");
-        return millisecond;
     }
 
     private int ValidMinute(int minute)
     {
         if (minute < 0 || minute > 59)
-            throw new System.ArgumentOutOfRangeException(nameof(minute), $"The minute: {minute} is not valid.");
+            throw new System.ArgumentOutOfRangeException(paramName: null, $"The minute: {minute} is not valid.");
         return minute;
     }
 
     private int ValidSecond(int second)
     {
         if (second < 0 || second > 59)
-            throw new System.ArgumentOutOfRangeException(nameof(second), $"The second: {second} is not valid.");
+            throw new System.ArgumentOutOfRangeException(paramName: null, $"The second: {second} is not valid.");
         return second;
     }
 
-    public int ToMilliseconds()
+    private int ValidMillisecond(int millisecond)
     {
-        return (Hour * 3600000) + (Minute * 60000) + (Second * 1000) + Millisecond;
+        if (millisecond < 0 || millisecond > 999)
+            throw new System.ArgumentOutOfRangeException(paramName: null, $"The millisecond: {millisecond} is not valid.");
+        return millisecond;
     }
-
-    public int ToSeconds()
-    {
-        return (Hour * 3600) + (Minute * 60) + Second;
-    }
-
-    public int ToMinutes()
-    {
-        return (Hour * 60) + Minute;
-    }
-
-    public bool IsOtherDay(Time time)
-    {
-        int totalMilliseconds = ToMilliseconds() + time.ToMilliseconds();
-        const int millisecondsPerDay = 24 * 60 * 60 * 1000; //24 horas * 60 min * 60 seg * 1000 ms
-        return totalMilliseconds >= millisecondsPerDay;
-    }
-
-    public Time Add(Time time)
-    {
-        int totalMilliseconds = ToMilliseconds() + time.ToMilliseconds();
-        const int millisecondsPerDay = 24 * 60 * 60 * 1000;        
-        totalMilliseconds %= millisecondsPerDay;
-
-        int hour = totalMilliseconds / 3600000;
-        totalMilliseconds %= 3600000;
-
-        int minute = totalMilliseconds / 60000;
-        totalMilliseconds %= 60000;
-
-        int second = totalMilliseconds / 1000;
-        int millisecond = totalMilliseconds % 1000;  
-
-        return new Time(hour, minute, second, millisecond);
-    }
-
-    // public Time Add(Time other)
-    // {
-    //     int ms = this.Millisecond + other.Millisecond;
-    //     int carrySec = ms / 1000;
-    //     ms %= 1000;
-
-    //     int sec = this.Second + other.Second + carrySec;
-    //     int carryMin = sec / 60;
-    //     sec %= 60;
-
-    //     int min = this.Minute + other.Minute + carryMin;
-    //     int carryHour = min / 60;
-    //     min %= 60;
-
-    //     int hour = this.Hour + other.Hour + carryHour;
-    //     hour %= 24;
-
-    //     return new Time(hour, min, sec, ms);
-    // }
-
-    public override string ToString()
-    {
-        int hour12;
-        string period;
-
-        if (Hour == 0)
-        {
-            hour12 = 0;
-            period = "AM";
-        }
-        else if (Hour < 12)
-        {
-            hour12 = Hour;
-            period = "AM";
-        }
-        else if (Hour == 12)
-        {
-            hour12 = 12;
-            period = "PM";
-        }
-        else
-        {
-            hour12 = Hour - 12;
-            period = "PM";
-        }
-
-        return $"{hour12:00}:{Minute:00}:{Second:00}.{Millisecond:000} {period}";
-    }
-
 }

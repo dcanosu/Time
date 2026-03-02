@@ -1,0 +1,34 @@
+@startuml Backend
+namespace Backend {
+
+class Time {
+    -- Fields --
+    - int _hour
+    - int _minute
+    - int _second
+    - int _millisecond
+
+    -- Properties --
+    + int Hour
+    + int Minute
+    + int Second
+    + int Millisecond
+
+    -- Public Methods --
+    + Time Add(Time time)
+    + bool IsOtherDay(Time time)
+    + Time(+ 4 overloads)
+    + int ToMinutes()
+    + int ToSeconds()
+    + int ToMilliseconds()
+    + string ToString()
+
+    -- Private Methods --
+    - int ValidHour(int hour)
+    - int ValidMinute(int minute)
+    - int ValidSecond(int second)
+    - int ValidMillisecond(int millisecond)
+}
+
+}
+@enduml
