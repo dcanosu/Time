@@ -3,11 +3,17 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy the solution and project files
-COPY **/*.csproj ./
-RUN dotnet restore
+COPY Time/Backend/Backend.csproj ./Backend/
+COPY Time/Frontend/Frontend.csproj ./Frontend/
 
-COPY . .
-RUN dotnet publish **/Frontend.csproj -c Release -o /app/publish
+RUN dotnet restore Frontend/Frontend.csproj
+
+# Copy everything else and build app
+COPY Time/Backend/ ./Backend/
+COPY Time/Frontend/ ./Frontend/
+
+WORKDIR "/src/Frontend"
+RUN dotnet publish "Frontend.csproj" -c Release -o /app/publish
 
 # STAGE 2: Runtine
 FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
